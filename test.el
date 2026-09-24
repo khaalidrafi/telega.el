@@ -969,6 +969,43 @@ argument would leave them holding an object the cache does not use."
   (telega-touch-mode -1)
   (should (null (lookup-key telega-root-mode-map [mouse-1]))))
 
+(ert-deftest telega-chat-title-cache-test ()
+  "Test chat titles caching and invalidation.
+Chat title is a hot path -- it is computed for every root line
+render and on every chat matcher application, so it is memoized
+on the chat and MUST stay in sync with the chat data."
+  (let* ((chat-id 777001)
+         (chat (plist-put (copy-sequence (car telega--filtered-chats))
+                          :id chat-id)))
+    (unwind-protect
+        (progn
+          (puthash chat-id chat telega--chats)
+          ;; computed and cached
+          (should (string= (telega-chat-title chat) "test channel1"))
+          (should (plist-get chat telega-chat--title-cache))
+
+          ;; in-place chat update is invisible for the cache until
+          ;; it is invalidated
+          (plist-put chat :title "renamed channel")
+          (should (string= (telega-chat-title chat) "test channel1"))
+          (telega-chat-title--clear-cache chat)
+          (should (string= (telega-chat-title chat) "renamed channel"))
+
+          ;; `telega-chat--mark-dirty' invalidates the cache, this is
+          ;; the path TDLib updates go through
+          (telega-chat-title chat)
+          (should (plist-get chat telega-chat--title-cache))
+          (plist-put chat :title "renamed again")
+          (telega-chat--mark-dirty chat)
+          (should (string= (telega-chat-title chat) "renamed again"))
+
+          ;; different title types are cached separately
+          (should (string= (telega-chat-title chat nil 'no-badges)
+                           "renamed again"))
+          (should (= (length (plist-get chat telega-chat--title-cache)) 2))
+          )
+      (remhash chat-id telega--chats))))
+
 ;; Local Variables:
 ;; no-byte-compile: t
 ;; End:

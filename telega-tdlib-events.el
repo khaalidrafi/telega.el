@@ -42,6 +42,7 @@
   "Something changed in CHAT, button needs to be updated.
 DIRTINESS specifies additional CHAT dirtiness."
   (cl-assert chat)
+  (telega-chat-title--clear-cache chat)
   (let ((chat-dirtiness (nconc dirtiness (plist-get chat :telega-dirtiness))))
     (telega-debug "IN: `telega-chat--update': %s dirtiness: %S"
                   (telega-chat-title chat) chat-dirtiness)
@@ -67,6 +68,9 @@ DIRTINESS specifies additional CHAT dirtiness."
 (defun telega-chat--mark-dirty (chat &optional event)
   "Mark CHAT as dirty by EVENT."
   (cl-assert chat)
+  ;; Chat's fields may be updated in place, cached title is not valid
+  ;; anymore
+  (telega-chat-title--clear-cache chat)
   (unless (memq chat telega--dirty-chats)
     (setq telega--dirty-chats (cons chat telega--dirty-chats)))
   (plist-put chat :telega-dirtiness
@@ -116,6 +120,8 @@ DIRTINESS specifies additional CHAT dirtiness."
 
   ;; Update corresponding private chat as well
   (when-let ((chat (telega-chat-get (plist-get user :id) 'offline)))
+    ;; NOTE: chat title may be computed from user's info,
+    ;; `telega-chat--mark-dirty' drops chat's cached titles
     (telega-chat--mark-dirty chat event))
 
   (run-hook-with-args 'telega-user-update-hook user))
@@ -1119,6 +1125,10 @@ messages."
     (telega--info-update basicgroup)
 
     (when-let ((chat (telega-chat-by-basicgroup basicgroup)))
+      ;; Chat title is computed from basicgroup info, cached title is
+      ;; not valid anymore
+      (telega-chat-title--clear-cache chat)
+
       ;; NOTE: Updating basicgroup info might affect sorting or/and
       ;; chatbuf's prompt
       (when (or telega--sort-criteria
@@ -1150,6 +1160,10 @@ messages."
       (telega--verification-fetch-custom-emoji v-status))
 
     (when-let ((chat (telega-chat-by-supergroup supergroup)))
+      ;; Chat title is computed from supergroup info, cached title is
+      ;; not valid anymore
+      (telega-chat-title--clear-cache chat)
+
       ;; Fetch chat topics in async manner
       (when (and (not (plist-get old-supergroup :is_forum))
                  (plist-get supergroup :is_forum)

@@ -376,6 +376,19 @@ Combines chat permissions and admin/owner permissions."
         ))
     perms))
 
+(defvar telega-chat--title-cache 'telega-title-cache
+  "Plist property name for chat's titles cache.
+Cache is a plist of (KEY . TITLE) pairs, where KEY specifies title
+formatting parameters, see `telega-chat-title'.  On weak devices
+titles are computed a lot of times -- for every root line render
+and for every chat matcher application, so caching is a major win.
+Cache invalidated on `telega-chat--mark-dirty'/`telega-chat--update'
+and whenever a chat's underlying info object is updated.")
+
+(defun telega-chat-title--clear-cache (chat)
+  "Drop cached titles for the CHAT."
+  (plist-put chat telega-chat--title-cache nil))
+
 (defun telega-chat-title (chat &optional fmt-type no-badges)
   "Return title for the CHAT.
 Format title using FMT-TYPE, one of:
@@ -385,7 +398,21 @@ Format title using FMT-TYPE, one of:
   `full-name' - Uses only first and last name (for private/secret chats).
 If FMT-TYPE is not specified, then default chat's title is used.
 If NO-BADGES is specified, then do not attach any chat badges at the
-end of the title."
+end of the title.
+Result is cached per CHAT, see `telega-chat--title-cache'."
+  (let* ((cache (plist-get chat telega-chat--title-cache))
+         (key (list fmt-type no-badges))
+         (cached (cdr (assoc key cache))))
+    (if cached
+        cached
+      (prog1
+          (setq cached (telega-chat-title-compute chat fmt-type no-badges))
+        (plist-put chat telega-chat--title-cache
+                   (cons (cons key cached) cache))))))
+
+(defun telega-chat-title-compute (chat fmt-type no-badges)
+  "Compute (uncached) title for the CHAT.
+See `telega-chat-title' for FMT-TYPE and NO-BADGES description."
   (let* ((raw-title (or (when (eq fmt-type 'username)
                           (telega-chat-username chat 'with-@))
                         (when (telega-me-p chat)

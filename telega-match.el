@@ -231,8 +231,9 @@ Also matches if TEMEX-LIST is empty."
 ;; - (name ~REGEXP~) ::
 ;;   {{{temexdoc(chat, name, 2)}}}
 (define-telega-matcher chat name (chat regexp)
-  "Matches if chat's title matches REGEXP."
-  (or (string-match regexp (telega-chat-title chat))
+  "Matches if chat's title matches REGEXP.
+Chat badges are not included into the matched title."
+  (or (string-match regexp (telega-chat-title chat nil 'no-badges))
       (let ((info (telega-chat--info chat 'locally)))
         (or (string-match regexp (or (telega-tl-str info :first_name) ""))
             (string-match regexp (or (telega-tl-str info :last_name) ""))
