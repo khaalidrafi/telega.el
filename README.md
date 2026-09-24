@@ -60,6 +60,31 @@ Dashboard with Emacs Stories and important chats:
 See [Telega Manual](https://zevlg.github.io/telega.el/) for
 comprehensive documentation.
 
+# Lite mode and touch screens (Android)
+
+This fork adds two global minor modes for weak hardware (old laptops,
+phones and tablets running Emacs, e.g. Android with Termux):
+
+- `telega-lite-mode` — cuts rendering overhead: no images, no SVG
+  avatars, no animations, slower redisplay timers and smaller history
+  limits (see `telega-lite-presets`).  Chats stay fully functional,
+  just plain text.  Enable it in `init.el` *before* loading telega for
+  the full effect:
+
+  ```elisp
+  (telega-lite-mode 1)
+  ```
+
+- `telega-touch-mode` — finger friendliness: a single tap activates
+  buttons and links, a tap anywhere on a chat line opens it, scrolling
+  follows the touch drag smoothly, tooltips are suppressed (a long
+  press already opens telega context menus, as touch systems report it
+  as the right button).
+
+Both are enabled automatically when a touch device is detected
+(Termux or a `touch-screen` terminal), see
+`telega-touch-auto-enable`.
+
 # How to contribute
 
 Join our [Telegram group](https://t.me/emacs_telega "Telegram group")

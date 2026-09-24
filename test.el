@@ -939,6 +939,36 @@ argument would leave them holding an object the cache does not use."
       (remhash chat-id telega--chat-topics)
       (remhash bot-id users-ht)
       (remhash chat-id telega--chats))))
+
+(ert-deftest telega-lite-mode-test ()
+  "Test `telega-lite-mode' applies its presets and restores them."
+  (let ((telega-use-images t)
+        (telega-root-show-avatars t)
+        (telega-user-show-avatars t)
+        (telega-chat-history-limit 30))
+    (telega-lite-mode 1)
+    (should telega-lite-mode)
+    (should-not telega-use-images)
+    (should-not telega-root-show-avatars)
+    (should-not telega-user-show-avatars)
+    (should-not telega-sticker-animated-play)
+    (should (eq telega-chat-history-limit 10))
+    (telega-lite-mode -1)
+    (should-not telega-lite-mode)
+    (should telega-use-images)
+    (should telega-root-show-avatars)
+    (should (eq telega-chat-history-limit 30))))
+
+(ert-deftest telega-touch-mode-test ()
+  "Test `telega-touch-mode' rootbuf mouse-1 binding bookkeeping."
+  (should (null (lookup-key telega-root-mode-map [mouse-1])))
+  (telega-touch-mode 1)
+  (should telega-touch-mode)
+  (should (eq (lookup-key telega-root-mode-map [mouse-1])
+              #'telega-touch--root-mouse-1))
+  (telega-touch-mode -1)
+  (should (null (lookup-key telega-root-mode-map [mouse-1]))))
+
 ;; Local Variables:
 ;; no-byte-compile: t
 ;; End:

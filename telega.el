@@ -65,6 +65,8 @@ Used for manual generation.")
 (require 'telega-completions)
 (require 'telega-tdlib)
 (require 'telega-tdlib-events)
+(require 'telega-lite)
+(require 'telega-touch)
 
 ;; Emacs26 compat
 (eval-when-compile
@@ -408,6 +410,10 @@ string at point."
 
 ;; Enable root auto fill mode by default
 (telega-root-auto-fill-mode 1)
+
+;; Enable touch screen (Android) tweaks automatically when running on
+;; a touch device, see `telega-touch-auto-enable'
+(telega-touch-maybe-enable)
 
 ;; Enable chat auto fill mode by default in the chatbufs
 (add-hook 'telega-chat-mode-hook #'telega-chat-auto-fill-mode)
