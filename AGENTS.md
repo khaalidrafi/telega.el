@@ -93,6 +93,9 @@ Entry point: `telega.el` (requires all modules, runs `telega-load-hook` at :426)
 
 ## Gotchas
 
+- **Never compile TDLib on this host.** It comes from Guix channels
+  (`guix package -i tdlib` provides `libtdjson`); only the small
+  `server/` telega-server binary gets built here, linked against it.
 - Running telega needs a working `telega-server` binary + built TDLib;
   the elisp test suite does not.
 - `server/` is C here, upstream master is Rust — don't copy upstream Rust-era
